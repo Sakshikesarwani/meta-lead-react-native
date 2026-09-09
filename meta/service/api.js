@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://sizzling-semicolon-marshy.ngrok-free.dev";
+const BACKEND_URL = "https://meta-lead-react-native.vercel.app";
 
 export async function fetchLeads() {
   const response = await fetch(`${BACKEND_URL}/leads`);
