@@ -10,6 +10,7 @@ const io = new Server(server, {
     origin: "*",
   },
 });
+
 io.on("connection", (socket) => {
   console.log("RN client connected:", socket.id);
 
@@ -17,10 +18,10 @@ io.on("connection", (socket) => {
     console.log("RN client disconnected:", socket.id);
   });
 });
+
 app.use(express.json());
 
-const PORT = 3000;
-const VERIFY_TOKEN = "my_secret_token";
+const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || "my_secret_token";
 
 const PAGE_ACCESS_TOKEN = process.env.META_PAGE_ACCESS_TOKEN;
 
@@ -49,6 +50,7 @@ app.post("/webhook", async (req, res) => {
 
       if (!PAGE_ACCESS_TOKEN) {
         console.error("META_PAGE_ACCESS_TOKEN is not set");
+
         return res.sendStatus(200);
       }
 
@@ -67,7 +69,9 @@ app.post("/webhook", async (req, res) => {
         console.error("Meta API error:", data.error);
       } else {
         leads.push(data);
+
         io.emit("new_lead", data);
+
         console.log("Lead stored successfully");
       }
     }
@@ -75,6 +79,7 @@ app.post("/webhook", async (req, res) => {
     res.sendStatus(200);
   } catch (error) {
     console.error("Webhook processing error:", error);
+
     res.sendStatus(200);
   }
 });
@@ -86,6 +91,7 @@ app.get("/webhook", (req, res) => {
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("Webhook verified");
+
     res.status(200).send(challenge);
   } else {
     res.sendStatus(403);
@@ -96,6 +102,8 @@ app.get("/leads", (req, res) => {
   res.json(leads);
 });
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+module.exports = {
+  app,
+  server,
+  io,
+};
