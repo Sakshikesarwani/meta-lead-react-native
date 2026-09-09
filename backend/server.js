@@ -3,20 +3,13 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const app = express();
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
     origin: "*",
   },
-});
-
-io.on("connection", (socket) => {
-  console.log("RN client connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("RN client disconnected:", socket.id);
-  });
 });
 
 app.use(express.json());
@@ -27,12 +20,24 @@ const PAGE_ACCESS_TOKEN = process.env.META_PAGE_ACCESS_TOKEN;
 
 const leads = [];
 
+// Socket.IO
+io.on("connection", (socket) => {
+  console.log("RN client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("RN client disconnected:", socket.id);
+  });
+});
+
+// Health check
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
+// Meta webhook
 app.post("/webhook", async (req, res) => {
   console.log("Webhook event received:");
+
   console.log(JSON.stringify(req.body, null, 2));
 
   try {
@@ -60,9 +65,11 @@ app.post("/webhook", async (req, res) => {
         `&access_token=${PAGE_ACCESS_TOKEN}`;
 
       const response = await fetch(url);
+
       const data = await response.json();
 
       console.log("Lead details:");
+
       console.log(JSON.stringify(data, null, 2));
 
       if (data.error) {
@@ -76,34 +83,35 @@ app.post("/webhook", async (req, res) => {
       }
     }
 
-    res.sendStatus(200);
+    return res.sendStatus(200);
   } catch (error) {
     console.error("Webhook processing error:", error);
 
-    res.sendStatus(200);
+    return res.sendStatus(200);
   }
 });
 
+// Meta webhook verification
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
+
   const token = req.query["hub.verify_token"];
+
   const challenge = req.query["hub.challenge"];
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
     console.log("Webhook verified");
 
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
+    return res.status(200).send(challenge);
   }
+
+  return res.sendStatus(403);
 });
 
+// Get all leads
 app.get("/leads", (req, res) => {
   res.json(leads);
 });
 
-module.exports = {
-  app,
-  server,
-  io,
-};
+// Export server for Vercel
+module.exports = server;
