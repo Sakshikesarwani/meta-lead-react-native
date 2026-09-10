@@ -36,11 +36,12 @@ export function formatTime(createdTime) {
 }
 
 export function convertLead(lead) {
+  const name = getFieldValue(lead.field_data, "full_name");
   const email = getFieldValue(lead.field_data, "email");
 
   return {
     id: lead.id,
-    name: "Bablee",
+    name: name,
     email: email,
     source: "Facebook Lead Ad",
     time: formatTime(lead.created_time),
