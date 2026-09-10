@@ -20,7 +20,6 @@ const PAGE_ACCESS_TOKEN = process.env.META_PAGE_ACCESS_TOKEN;
 
 const leads = [];
 
-// Socket.IO
 io.on("connection", (socket) => {
   console.log("RN client connected:", socket.id);
 
@@ -29,12 +28,10 @@ io.on("connection", (socket) => {
   });
 });
 
-// Health check
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
-// Meta webhook
 app.post("/webhook", async (req, res) => {
   console.log("Webhook event received:");
 
@@ -91,7 +88,6 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// Meta webhook verification
 app.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
 
@@ -108,10 +104,8 @@ app.get("/webhook", (req, res) => {
   return res.sendStatus(403);
 });
 
-// Get all leads
 app.get("/leads", (req, res) => {
   res.json(leads);
 });
 
-// Export server for Vercel
 module.exports = server;
